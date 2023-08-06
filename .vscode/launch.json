@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: QNN Classifier",
+            "type": "python",
+            "python": "python3.9",
+            "request": "launch",
+            "program": "src/backend/main.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}
