@@ -176,7 +176,7 @@ def compile_qnn_model(training_data_path, training_data_labels_path, testing_dat
         qnn_results = model.evaluate(x_test_tfcirc, y_test)
         print(f"QNN Model Accuracy on Test Data: {round(qnn_results[1] * 100, 4)}%")
 
-    return True
+    return model
 
 # ---------------------------------------------------------------------------- #
 ## Classify the input image
