@@ -1,94 +1,61 @@
-# Diabetes Classification - QNN model
-# ---------------------------------------------------------------------------- #
-## Update package resources to account for version changes.
+"""
+Diabetic Retinotherapy using Quantum Computing - Classifier Module
+
+This module implements the QNN classifier model
+for Diabetic Retinotherapy classification
+"""
 import importlib, pkg_resources
+import cirq
+import sympy
+import numpy as np
+import pandas as pd
+import tensorflow as tf
+import tensorflow_quantum as tfq
 importlib.reload(pkg_resources)
 
 # ---------------------------------------------------------------------------- #
-## Importing essential Header Files
-import cv2, os, cirq, sympy, collections, os
-import numpy as np
-import seaborn as sns
-import pandas as pd
-
-import tensorflow as tf
-import tensorflow_quantum as tfq
-
-import matplotlib.pyplot as plt
-from cirq.contrib.svg import SVGCircuit
-
-import random
-
-# ---------------------------------------------------------------------------- #
-## This function loads the dataset into the program
-def load_dataset(training_data_path, training_data_labels_path, testing_data_path, testing_data_labels_path, index):
+def load_dataset(training_data_labels_path, testing_data_labels_path, index):
+    """This function loads the dataset into the program"""
     print("TASK : Loading the Training Dataset")
     x_train = []
-    # for image_name in os.listdir(training_data_path):
-    #     image_path = f"{training_data_path}/{image_name}"
-    #     raw_image = tf.keras.utils.load_img(image_path, target_size=(4,4), color_mode = 'grayscale')
-    #     # raw_image = tf.keras.utils.load_img(image_path, target_size=(89,134), color_mode = 'grayscale')
-    #     normalized_image = np.array(raw_image)/255.0
-    #     x_train.append(normalized_image)
-    
-    # print(np.array(x_train).shape)
-
     training_data = pd.read_csv("src/dataset/training_data/training_data.csv")
-    # print(training_data)
     for i in range(413):
-        # data = np.array(training_data[i])
         data = np.array(training_data[i:i+1])
         data_resize = data.reshape(4,4)
         x_train.append(data_resize)
 
     x_train = np.array(x_train)
 
-        
     y_train = []
     training_dataset_labels = pd.read_csv(training_data_labels_path)
     for i in range(len(training_dataset_labels)):
         grade = training_dataset_labels['retinopathy_grade'][i]
-        # val = 1 if(grade in (1,2,3,0)) else 0
         val = 1 if(grade == index) else 0
         y_train.append(val)
 
     print("TASK : Loading the Test Dataset")
     x_test = []
-    # for image_name in os.listdir(testing_data_path):
-    #     image_path = f"{testing_data_path}/{image_name}"
-    #     raw_image = tf.keras.utils.load_img(image_path, target_size=(4,4), color_mode = 'grayscale')
-    #     # raw_image = tf.keras.utils.load_img(image_path, target_size=(89,134), color_mode = 'grayscale')
-    #     normalized_image = np.array(raw_image)/255.0
-    #     x_test.append(normalized_image)
-
-
     testing_data = pd.read_csv("src/dataset/testing_data/testing_data.csv")
-    
     for i in range(103):
         data = np.array(testing_data[i:i+1])
         data_resize = data.reshape(4,4)
         x_test.append(data_resize)
-
     x_test = np.array(x_test)
-
 
     y_test = []
     testing_data_labels = pd.read_csv(testing_data_labels_path)
     for i in range(len(testing_data_labels)):
         grade = testing_data_labels['retinopathy_grade'][i]
-        # val = 1 if(grade in (1,2,3,0)) else 0
         val = 1 if(grade == index) else 0
         y_test.append(val)
 
     return np.array(x_train), np.array(y_train), np.array(x_test), np.array(y_test)
 
 # ---------------------------------------------------------------------------- #
-## Encode the data as quantum circuits
 def convert_to_circuit(image):
     """Encode truncated classical image into quantum datapoint."""
     values = np.ndarray.flatten(image)
     qubits = cirq.GridQubit.rect(4, 4)
-    # qubits = cirq.GridQubit.rect(8, 8)
     circuit = cirq.Circuit()
     for i, value in enumerate(values):
         if value:
@@ -97,19 +64,19 @@ def convert_to_circuit(image):
 
 
 def quantum_circuit(THRESHOLD, data):
+    """Encode the data as quantum circuits"""
     binary = np.array(data > THRESHOLD, dtype=np.float32)
     circuit = [convert_to_circuit(x) for x in binary]
     tf_circuit = tfq.convert_to_tensor(circuit)
-
     return tf_circuit
 
 # ---------------------------------------------------------------------------- #
-## Build the model circuit of Quantum Neural Network
 class CircuitLayerBuilder():
+    """Build the model circuit of Quantum Neural Network"""
     def __init__(self, data_qubits, readout):
         self.data_qubits = data_qubits
         self.readout = readout
-    
+
     def add_layer(self, circuit, gate, prefix):
         for i, qubit in enumerate(self.data_qubits):
             symbol = sympy.Symbol(prefix + '-' + str(i))
@@ -118,14 +85,12 @@ class CircuitLayerBuilder():
 def create_quantum_model(index):
     """Create a QNN model circuit and readout operation to go along with it."""
     data_qubits = cirq.GridQubit.rect(4, 4)  # a 4x4 grid.
-    # data_qubits = cirq.GridQubit.rect(8, 8)  # a 4x4 grid.
     readout = cirq.GridQubit(-1, -1)         # a single qubit at [-1,-1]
     circuit = cirq.Circuit()
-    
+
     # Prepare the readout qubit.
     circuit.append(cirq.X(readout))
     circuit.append(cirq.H(readout))
-    
     builder = CircuitLayerBuilder(
         data_qubits = data_qubits,
         readout=readout)
@@ -150,6 +115,7 @@ def create_quantum_model(index):
 
 
 def load_qnn_model(index):
+    """Creating a new QNN model"""
     model_circuit, model_readout = create_quantum_model(index)
     model = tf.keras.Sequential([
         # The input is the data-circuit, encoded as a tf.string
@@ -157,13 +123,12 @@ def load_qnn_model(index):
         # The PQC layer returns the expected value of the readout gate, range [-1,1].
         tfq.layers.PQC(model_circuit, model_readout),
     ])
-
     return model
 
 
 # ---------------------------------------------------------------------------- #
-## Hinge Accuracy
 def hinge_accuracy(y_true, y_pred):
+    """Method for Hinge Accuracy"""
     y_true = tf.squeeze(y_true) > 0.0
     y_pred = tf.squeeze(y_pred) > 0.0
     result = tf.cast(y_true == y_pred, tf.float32)
@@ -171,11 +136,11 @@ def hinge_accuracy(y_true, y_pred):
     return tf.reduce_mean(result)
 
 # ---------------------------------------------------------------------------- #
-## Training the QNN model:
-def compile_qnn_model(training_data_path, training_data_labels_path, testing_data_path, testing_data_labels_path, THRESHOLD, validate,index):
-    print("Compiling model for index = ", index)
-    x_train, y_train, x_test, y_test = load_dataset(training_data_path, training_data_labels_path, testing_data_path, testing_data_labels_path, index)
-    model = load_qnn_model(index)
+def compile_qnn_model(training_data_labels_path, testing_data_labels_path, THRESHOLD, validate, grade):
+    """Training the QNN model"""
+    print(f"Compiling model for grade {grade}")
+    x_train, y_train, x_test, y_test = load_dataset(training_data_labels_path, testing_data_labels_path, grade)
+    model = load_qnn_model(grade)
     model.compile(
         loss=tf.keras.losses.Hinge(),
         optimizer=tf.keras.optimizers.Adam(),
@@ -205,13 +170,8 @@ def compile_qnn_model(training_data_path, training_data_labels_path, testing_dat
         epochs=EPOCHS,
         verbose=1,
         validation_data=(x_test_tfcirc, y_test_hinge))
-    
-    # Saving the model
-    print("\nTASK: Saving the QNN model :\n")
-    model.save_weights("src/backend/utils/model_store/")
-    print("QNN Model Saved on your local machine !!!")
-    
-    if(validate):
+
+    if validate:
         print("\n\nEvaluating the QNN model on the dataset :")
         qnn_results = model.evaluate(x_test_tfcirc, y_test)
         qnn_results2 = model.evaluate(x_train_tfcirc, y_train)
@@ -229,85 +189,23 @@ def compile_qnn_model(training_data_path, training_data_labels_path, testing_dat
     return model
 
 # ---------------------------------------------------------------------------- #
-## Classify the input image
-# def classify(THRESHOLD, image_path, model0, model1, model2, model3, model4):
-#     # print("TASK : Loading the Image into the classifier")
-#     raw_image = tf.keras.utils.load_img(image_path, target_size=(4,4), color_mode = 'grayscale')
-#     image_data = np.array(raw_image)/255.0
-#     tf_circuit = quantum_circuit(THRESHOLD, image_data[0:1])
-#     print(tf_circuit)
-#     print(image_data)
-#     response0 = model0.predict(tf_circuit)[0,0]
-#     response1 = model1.predict(tf_circuit)[0,0]
-#     response2 = model2.predict(tf_circuit)[0,0]
-#     response3 = model3.predict(tf_circuit)[0,0]
-#     response4 = model4.predict(tf_circuit)[0,0]
-#     print(image_path)
-#     print("Response 0 = ", response0)
-#     print("Response 1 = ", response1)
-#     print("Response 2 = ", response2)
-#     print("Response 3 = ", response3)
-#     print("Response 4 = ", response4)
-
-#     print("Response = ", model0.predict(tf_circuit) )
-
-#     a=(response0, response1, response2, response3, response4)
-#     response_check = max(a)
-
-#     print(response_check)
-#     print()
-
-#     if(response_check == response0):
-#         return 0
-#     elif(response_check == response1):
-#         return 1
-#     elif(response_check == response2):
-#         return 2
-#     elif(response_check == response3):
-#         return 3
-#     else:
-#         return 4
-    
-
-
-def classify(THRESHOLD, image_number, model0, model1, model2, model3, model4):
-    # print("TASK : Loading the Image into the classifier")
-    # raw_image = tf.keras.utils.load_img(image_path, target_size=(4,4), color_mode = 'grayscale')
-    testing_data = pd.read_csv("src/dataset/testing_data/testing_data.csv")
-    image_data = testing_data[image_number : image_number+1]
-    # print(image_data)
-    tf_circuit = quantum_circuit(THRESHOLD, image_data[0:1])
-    # print(tf_circuit)
-    # print(image_data)
+def classify(THRESHOLD, image, model0, model1, model2, model3, model4):
+    """Diabetic Retinopathy Grade Prediction on a user-specified image"""
+    tf_circuit = quantum_circuit(THRESHOLD, image)
     response0 = model0.predict(tf_circuit)[0,0]
     response1 = model1.predict(tf_circuit)[0,0]
     response2 = model2.predict(tf_circuit)[0,0]
     response3 = model3.predict(tf_circuit)[0,0]
     response4 = model4.predict(tf_circuit)[0,0]
-    
-    # print(image_path)
-    # print("Response = ", model0.predict(tf_circuit))
 
     print(f"Predicted Values :\nModel-0 : {response0}\nModel-1 : {response1}\nModel-2 : {response2}\nModel-3 : {response3}\nModel-4 : {response4}\n")
-
-
-    a=(response0, response1, response2, response3, response4)
-    response_check = max(a)
-
-    # print(response_check)
-    # print()
-
-    if(response_check == response0):
-        return 0
-    elif(response_check == response1):
-        return 1
-    elif(response_check == response2):
-        return 2
-    elif(response_check == response3):
-        return 3
-    else:
-        return 4
-    
+    return {
+        "grade_0": float(response0),
+        "grade_1": float(response1),
+        "grade_2": float(response2),
+        "grade_3": float(response3),
+        "grade_4": float(response4)
+        }
 
 # ---------------------------------------------------------------------------- #
-
+# ---------------------------------------------------------------------------- #

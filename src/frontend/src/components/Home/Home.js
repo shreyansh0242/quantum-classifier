@@ -50,7 +50,6 @@ function Home(props) {
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center">
           <Header title="DIABETIC RETINOPATHY " subtitle="" />
-
           <Box 
             display="flex" 
             alignItems="center"
@@ -58,7 +57,7 @@ function Home(props) {
             marginTop="0px"  
             
           >
-            <Box  margin="20px" >
+            {/* <Box  margin="20px" >
             <h1>
             <Link to="/login">Login</Link>
                 </h1>
@@ -69,7 +68,7 @@ function Home(props) {
                 <Link to="/signup" fontColor="blue">Signup</Link>
                 </h1>
               
-            </Box>
+            </Box> */}
       </Box>
           
         </Box>

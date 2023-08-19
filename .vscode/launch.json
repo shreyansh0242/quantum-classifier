@@ -8,6 +8,9 @@
             "request": "launch",
             "program": "src/backend/main.py",
             "console": "integratedTerminal",
+            "env": {
+                "UPLOAD_DIR": "src/backend/uploads"
+            },
             "justMyCode": true
         }
     ]
