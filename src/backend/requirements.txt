@@ -5,3 +5,10 @@ pyyaml
 h5py
 opencv-python
 scikit-learn
+fastapi
+Pillow
+starlette
+gunicorn
+uvicorn
+numpy
+python-multipart
