@@ -1,6 +1,8 @@
 import { Box, IconButton, Typography, useTheme } from "@mui/material";
 import { useContext } from "react";
 import { ColorModeContext, tokens } from "../../theme";
+import Header from "../../components/Header";
+
 import InputBase from "@mui/material/InputBase";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
@@ -18,7 +20,7 @@ const Topbar = () => {
     const colorMode = useContext(ColorModeContext);
 
 
-    return <Box display="flex" justifyContent="space-between" p={2}>
+    return <Box display="flex" justifyContent="space-between" p={2} backgroundColor={colors.primary[400]}>
         {/* SEARCH BAR */}
       <Box
         display="flex"
@@ -38,8 +40,19 @@ const Topbar = () => {
                   style={{ cursor: "pointer", borderRadius: "50%" }}
                 />
       </Box>
+
+      <Box
+        display="flex"
+        //backgroundColor={colors.primary[400]}
+        borderRadius="3px"
+        height="40px"
+      >
+       <Header title="DIABETIC RETINOPATHY" subtitle="" />
+      </Box>
+
+
         {/* ICONS */}
-        <Box display="flex">
+        <Box display="flex" mt="-10px">
             <IconButton onClick={colorMode.toggleColorMode}>
             {theme.palette.mode === "dark" ? (
                 <DarkModeOutlinedIcon />
@@ -48,7 +61,13 @@ const Topbar = () => {
             )}
             </IconButton>
             
-            <IconButton>
+            <IconButton 
+              component={Link} 
+              to="https://healthplus.flipkart.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+
             <img
                   alt="profile-user"
                   width="45px"
@@ -58,17 +77,17 @@ const Topbar = () => {
                 />
             </IconButton>
 
-            <IconButton component={Link} to="/">
-            {/* <NotificationsOutlinedIcon /> */}
+            {/* <IconButton component={Link} to="/"> 
+            <NotificationsOutlinedIcon />
             <HomeOutlined/>
-            </IconButton>
+            </IconButton> */}
             
             {/* <IconButton>
             <SettingsOutlinedIcon />
-            </IconButton>
-            <IconButton>
-            <PersonOutlinedIcon />
             </IconButton> */}
+            <IconButton component={Link} to="/profile">
+            <PersonOutlinedIcon />
+            </IconButton>
         </Box>
     </Box>
 }

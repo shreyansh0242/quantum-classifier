@@ -49,7 +49,7 @@ function Home(props) {
   return (
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Header title="DIABETIC RETINOPATHY " subtitle="" />
+          <Header title="" subtitle="" />
           <Box 
             display="flex" 
             alignItems="center"
@@ -94,9 +94,7 @@ function Home(props) {
             variant="h5"
             >
             Diabetic retinopathy is a diabetes complication that affects eyes. It's caused by damage to the blood vessels of the light-sensitive tissue at the back of the eye (retina).
-At first, diabetic retinopathy might cause no symptoms or only mild vision problems. But it can lead to blindness.
-The condition can develop in anyone who has type 1 or type 2 diabetes. The longer you have diabetes and the less controlled your blood sugar is, the more likely you are to develop this eye complication.
-            </Typography>
+At first, diabetic retinopathy might cause no symptoms or only mild vision problems. But it can lead to blindness.</Typography>
 
 
           </Box>
