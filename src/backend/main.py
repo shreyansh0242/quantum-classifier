@@ -1,13 +1,21 @@
 ## Diabetic Retinotherapy Classifier - Backend
 from fastapi import FastAPI, UploadFile
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 import os
 import cv2
 import uvicorn
 from utils import classifier, preprocessing
 
 app = FastAPI()
-
+origins = ["*"]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Directory to store uploaded images
 UPLOAD_DIR = os.environ["UPLOAD_DIR"]
@@ -32,6 +40,9 @@ def train_models():
     print("DONE : Successfully Trained all the models\n\n")
     return model_grade_0, model_grade_1, model_grade_2, model_grade_3, model_grade_4
 
+    
+
+
 
 @app.post("/upload/")
 async def upload_image(file: UploadFile):
@@ -47,6 +58,8 @@ async def upload_image(file: UploadFile):
         grade_dict = classifier.classify(THRESHOLD, processed_image, model_grade_0, model_grade_1, model_grade_2, model_grade_3, model_grade_4)
         predicted_grade = 'grade_0'
         predicted_value = grade_dict[predicted_grade]
+        print('new response',predicted_value)
+
         for key in ['grade_1', 'grade_2', 'grade_3', 'grade_4']:
             value = grade_dict[key]
             if  value > predicted_value:
